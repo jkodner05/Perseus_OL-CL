@@ -39,6 +39,7 @@ def download_html(startpage, directory):
                 return
             subprocess.run(["wget", newpage, "-O", fname, "-q"])
 
+
 def download_htmls():
     with open(AUTHORLIST, "r") as f:
         directory = ""
@@ -86,9 +87,6 @@ def extract_text(xmlfname):
     rx_multispace = re.compile(r"\ +")
 
     try:
-#        tree = ET.parse(xmlfname)
-#        root = tree.getroot()
-    #    print("\n!!!\n\n:::\n")
         with open(xmlfname, "r") as f:
             xmlstr = "\n".join([line.strip() for line in f])
             xmlorig = xmlstr
@@ -97,13 +95,6 @@ def extract_text(xmlfname):
                 xmlstr = rx.sub(" ", xmlstr)
             xmlstr = rx_pairtag.sub(" ", xmlstr)
             xmlstr = rx_multispace.sub(" ", xmlstr)
-
-#            if "<" in xmlstr or ">" in xmlstr:
-#                print(xmlfname)
-#                print(xmlorig)
-#                print("\n-----\n")
-#                print(xmlstr)
-#                input("\n...\n\n")
 
             return xmlstr
     except:
@@ -115,8 +106,6 @@ def extract_texts():
     for subdir, dirs, fnames in walk(XMLBASE):
         author = basename(subdir)
         outfname = join(TEXTBASE, author.replace(" ","_") + ".txt")
-#        if not exists(directory):
-#            makedirs(directory)
         if len(fnames) > 0:
             print(outfname)
             with open(outfname, "w") as f:
@@ -125,8 +114,15 @@ def extract_texts():
 
 
 def main():
-#    download_htmls()
-#    download_xmls()
+    if not exists(HTMLBASE):
+        makedirs(HTMLBASE)
+    if not exists(XMLBASE):
+        makedirs(XMLBASE)
+    if not exists(TEXTBASE):
+        makedirs(TEXTBASE)
+
+    download_htmls()
+    download_xmls()
     extract_texts()
 
     
