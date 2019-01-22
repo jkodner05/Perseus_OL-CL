@@ -79,70 +79,56 @@ def download_xmls():
             download_xml(directory, join(subdir,fname))
 
 
-tags = set([])
-def extract_text(directory, xmlfname):
-    rx_tag = re.compile(r"<.+?>")
-
-
+def extract_text(xmlfname):
+    rx_singletag = re.compile(r"<.+?/>")
+    rx_pairtag = re.compile(r"<.+?>")
+    rx_delpairtags = [re.compile(r"<\s*foreign.+?foreign\s*>"),re.compile(r"<\s*unclear.+?unclear\s*>"),re.compile(r"<\s*note.+?note\s*>"),re.compile(r"<\s*cit.+?cit\s*>"),re.compile(r"<\s*ref.+?ref\s*>"),re.compile(r"<\s*bibl.+?bibl\s*>"),re.compile(r"<\s*lemma.+?lemma\s*>")]
+    rx_multispace = re.compile(r"\ +")
 
     try:
-        tree = ET.parse(xmlfname)
-        root = tree.getroot()
+#        tree = ET.parse(xmlfname)
+#        root = tree.getroot()
     #    print("\n!!!\n\n:::\n")
         with open(xmlfname, "r") as f:
-            for line in f:
-                if "<back" in line:
-                    print(xmlfname, line)
-                match = rx_tag.findall(line.strip())
-                for m in match:
-                    if "/" not in m:
-                        tags.add(m[0:m.find(" ")])
-#            for line in f:
-#                print(rx_tag.sub("",line.strip()))
-#            print("!\n!\n!\n")
-            for tag in root.iter("term"):
-                print(term.text)
+            xmlstr = "\n".join([line.strip() for line in f])
+            xmlorig = xmlstr
+            xmlstr = rx_singletag.sub(" ", xmlstr)
+            for rx in rx_delpairtags:
+                xmlstr = rx.sub(" ", xmlstr)
+            xmlstr = rx_pairtag.sub(" ", xmlstr)
+            xmlstr = rx_multispace.sub(" ", xmlstr)
 
-#            input("...\n\n\n")
+#            if "<" in xmlstr or ">" in xmlstr:
+#                print(xmlfname)
+#                print(xmlorig)
+#                print("\n-----\n")
+#                print(xmlstr)
+#                input("\n...\n\n")
 
-
-
-
-#        got = False
-#        for p in root.iter("p"):
-#            got=True
-
-#        if not got:
-#            print(xmlfname)
-#            with open(xmlfname, "r") as f:
-#                for line in f:
-#                    print(line.strip())
-
-#            if p.text and p.text.strip():
-#                print(p.text.strip())
+            return xmlstr
     except:
         print("CAN'T PARSE: ", xmlfname)
+        return ""
 
-
-
-#    print("\n\n!!!\n\n")
 
 def extract_texts():
     for subdir, dirs, fnames in walk(XMLBASE):
         author = basename(subdir)
-        directory = join(TEXTBASE, author)
-        if not exists(directory):
-            makedirs(directory)
-        for fname in fnames:
-#            print(fname)
-            extract_text(directory, join(subdir,fname))
-    
-    print(len(tags), tags)
+        outfname = join(TEXTBASE, author.replace(" ","_") + ".txt")
+#        if not exists(directory):
+#            makedirs(directory)
+        if len(fnames) > 0:
+            print(outfname)
+            with open(outfname, "w") as f:
+                for fname in fnames:
+                    f.write(extract_text(join(subdir,fname)) + "\n")
+
 
 def main():
 #    download_htmls()
 #    download_xmls()
     extract_texts()
+
     
 if __name__ == "__main__":
     main()
